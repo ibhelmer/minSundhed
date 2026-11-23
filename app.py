@@ -9,9 +9,39 @@ from health import demo, normalize, apple, analyze, correlations, FIELDS
 st.set_page_config(page_title="minSundhed",page_icon="❤️",layout="wide")
 st.title("minSundhed")
 st.caption("Personligt sundheds- og træningsdashboard • ikke et medicinsk værktøj")
-upload=st.sidebar.file_uploader("Importer sundhedsdata",type=["csv","xml","zip"])
+source=st.sidebar.radio("Datakilde",["Garmin Connect","Filimport","Demodata"],index=2)
+upload=st.sidebar.file_uploader("Importer sundhedsdata",type=["csv","xml","zip"]) if source=="Filimport" else None
+if source=="Garmin Connect":
+    key=st.sidebar.text_input("Garmin Connect Personal API-nøgle",type="password",key="garmin_key")
+    days=st.sidebar.selectbox("Synkroniseringsperiode (dage)",[7,14,30,90],index=1)
+    if st.sidebar.button("Afbryd og ryd Garmin-data"):
+        st.session_state.pop("garmin_data",None)
+        st.session_state.pop("garmin_sync_time",None)
+        st.session_state.pop("garmin_warnings",None)
+        st.stop()
+    if st.sidebar.button("Hent aktuelle Garmin-data",disabled=not key.strip()):
+        from garmin_sync import sync
+        st.session_state.pop("garmin_data",None)
+        try:
+            with st.spinner("Henter målinger fra Garmin Connect..."):
+                raw,warnings=sync(key.strip(),days)
+            st.session_state["garmin_data"]=raw
+            st.session_state["garmin_warnings"]=warnings
+            st.session_state["garmin_sync_time"]=pd.Timestamp.now()
+        except Exception as e:
+            status=getattr(e,"status_code",None)
+            st.error(f"Garmin-synkronisering mislykkedes ({type(e).__name__}, status {status or 'ukendt'}). Kontrollér nøgle, netværk og API-adgang.")
+    if "garmin_data" not in st.session_state:
+        st.info("Indtast din nøgle i sidepanelet og hent data.")
+        st.stop()
+    st.sidebar.caption("Senest hentet: "+str(st.session_state["garmin_sync_time"]))
+    for warning in st.session_state.get("garmin_warnings",[]):
+        st.sidebar.warning(warning)
+    st.caption("Garmin HRV: gennemsnit for seneste nat (ikke direkte sammenligneligt med Apple SDNN).")
 try:
-    if upload is None:
+    if source=="Garmin Connect":
+        raw=st.session_state["garmin_data"]
+    elif upload is None:
         raw=demo()
         st.info("Du ser syntetiske demodata.")
     elif upload.name.lower().endswith(".csv"):

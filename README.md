@@ -30,3 +30,6 @@ Repository er offentligt: upload aldrig egne sundhedsdata, eksportfiler eller cr
 
 ## Licens
 Apache-2.0. Se LICENSE og NOTICE.
+
+## Garmin Connect Personal API
+Brug Python 3.12 eller nyere. Opret en Personal API Key under Profile & Account → Settings → Personal API Key på Garmin Connect Web. Vælg Garmin Connect som datakilde i appen, indtast nøglen i det maskerede felt, vælg 7, 14, 30 eller 90 dage og klik Hent aktuelle Garmin-data. Appen bruger Garmins officielle Python-klient til tokenudveksling og API-kald. Nøgle og målinger holdes i sessionshukommelsen; klientens midlertidige tokenfil slettes efter synkronisering. Hent igen for at opdatere; uret skal først synkronisere med Garmin Connect. Manglende eller ukendte felter vises som manglende data. Garmin HRV er nattens gennemsnit og må ikke blandes ukritisk med Apple SDNN. RPE og eksplicitte hviledage skal stadig registreres i CSV til belastningsberegning. Integrationens feltmapping er ikke verificeret mod en rigtig Garmin-konto. Se https://github.com/garmin/connect-personal-api-python og https://developer.garmin.com/gc-developer-program/personal/personal-api/.
